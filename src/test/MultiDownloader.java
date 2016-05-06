@@ -41,6 +41,9 @@ public class MultiDownloader
 			/* number of bytes each thread should download */			
 			long byte_per_thread = file_length / DOWNLOAD_THREAD_NUM;
 			long left = file_length % DOWNLOAD_THREAD_NUM;
+			if (left == 0) {
+				System.out.println();
+			}
 			for(int i = 0; i < DOWNLOAD_THREAD_NUM; i++)
 			{
 				/* Open multiple InputStream according to the same URL obj */
@@ -101,6 +104,9 @@ class DownloadThread extends Thread
 			/* each thread writes to the right output point */
 			raf.seek(start);
 			long length = end - start + 1;
+			if (length == 0) {
+				System.out.println();
+			}
 			int hasRead = 0;
 			while( (hasRead = is.read(buf)) > 0)
 				raf.write(buf, 0, hasRead);
