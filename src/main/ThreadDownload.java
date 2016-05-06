@@ -29,11 +29,19 @@ public class ThreadDownload extends Thread{
 			int count = 0;
 			long record = start;
 			while( (count = inputStream.read(buf)) > 0) {
-				record += buf.length;
-				if (record < end)
-					randomAccessFile.write(buf, 0, count);
-				else
-					randomAccessFile.write(buf, 0, buf.length+(int)(record-end));
+				record += count/8;
+				try {
+					if (record <= end)
+						randomAccessFile.write(buf, 0, count);
+					else {
+						randomAccessFile.write(buf, 0, count);
+						System.out.println(this.getName() + " breaked");
+						break;
+					}
+				} catch (java.lang.IndexOutOfBoundsException e) {
+					System.out.println("IndexOutOfBoundsException : " + 
+								"record : " + record + " end : " + end + " count : " + count);
+				}
 				times ++;
 			}
 		} catch (IOException e) {
