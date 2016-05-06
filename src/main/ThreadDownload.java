@@ -27,8 +27,13 @@ public class ThreadDownload extends Thread{
 			inputStream.skip(start);
 			randomAccessFile.seek(start);
 			int count = 0;
+			long record = start;
 			while( (count = inputStream.read(buf)) > 0) {
-				randomAccessFile.write(buf, 0, count);
+				record += buf.length;
+				if (record < end)
+					randomAccessFile.write(buf, 0, count);
+				else
+					randomAccessFile.write(buf, 0, buf.length+(int)(record-end));
 				times ++;
 			}
 		} catch (IOException e) {

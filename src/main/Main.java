@@ -46,7 +46,7 @@ public class Main {
 			if (0 == left)
 				System.out.println("left is 0");
 			for (int index = 0; index < numOfThreads; index ++) {
-				if (0 == index) {
+				if (0 != index) {
 					inputStreamArrays[index] = url.openStream();
 					randomAccessFilesArrays[index] = new RandomAccessFile(file, "rw");
 				}
