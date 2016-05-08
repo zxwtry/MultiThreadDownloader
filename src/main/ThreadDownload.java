@@ -22,14 +22,15 @@ public class ThreadDownload extends Thread{
 	
 	@Override
 	public void run() {
-		int times = 0;
+		long downloadLength = 0;
 		try {
 			inputStream.skip(start);
 			randomAccessFile.seek(start);
 			int count = 0;
 			long record = start;
 			while( (count = inputStream.read(buf)) > 0) {
-				record += count/8;
+				record += count;
+				downloadLength += count;
 				try {
 					if (record <= end)
 						randomAccessFile.write(buf, 0, count);
@@ -42,7 +43,6 @@ public class ThreadDownload extends Thread{
 					System.out.println("IndexOutOfBoundsException : " + 
 								"record : " + record + " end : " + end + " count : " + count);
 				}
-				times ++;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -56,7 +56,7 @@ public class ThreadDownload extends Thread{
 				e.printStackTrace();
 			}
 			System.out.println("ThreadName : "+this.getName() + 
-					" ended.\nDownload buffer times is " + times);
+					" ended.\nDownload length is " + downloadLength);
 		}
 	}
 }

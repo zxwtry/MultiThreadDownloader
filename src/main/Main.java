@@ -23,7 +23,11 @@ public class Main {
 		int indexOfAnotherFile = 1;
 		File file = new File(fileNameAbsoulte);
 		while ( file.exists() ) {
-			file = new File(fileNameAbsoulte+String.valueOf(indexOfAnotherFile ++));
+			int indexOfLastDot = fileName.lastIndexOf(".");
+			String fileNamePre = fileName.substring(0, indexOfLastDot);
+			String fileNamePos = fileName.substring(indexOfLastDot+1, fileName.length());
+			fileNameAbsoulte = SystemInfo.getDefaultDownloadPath()+"/"+fileNamePre+indexOfAnotherFile+++"."+fileNamePos;
+			file = new File(fileNameAbsoulte);
 		}
 		
 		int numOfThreads = 5;
