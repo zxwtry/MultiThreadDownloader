@@ -1,5 +1,9 @@
 package test;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -12,9 +16,12 @@ import java.util.concurrent.ThreadFactory;
 
 public class ThreadPoolTest {
 	static int numOfThreads = 3;
+	static Map<String, Integer> map = new HashMap<String, Integer>();
+	static int valueCount = 0;
 	public static void main(String[] args) {
-		System.out.println(4 << 20);
+//		System.out.println(4 << 20);
 		myNewFixedThreadPool();
+		
 	}
 	static void myNewFixedThreadPool() {
 		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(numOfThreads);
@@ -31,6 +38,7 @@ public class ThreadPoolTest {
 					System.out.println("ThreadName:"+Thread.currentThread().getName()+
 							"\t...\t"+"ThreadID:"+Thread.currentThread().getId()+
 							"\t...\tindex:"+indexInThread);  
+					System.out.println(getValueFromString(Thread.currentThread().getName()));
 				}
 			});
 		}
@@ -41,6 +49,14 @@ public class ThreadPoolTest {
 		public Thread newThread(Runnable r) {
 			Thread newThread = new Thread(r);
 			return newThread;
+		}
+	}
+	static int getValueFromString(String threadName) {
+		if (map.containsKey(threadName))
+			return map.get(threadName);
+		else {
+			map.put(threadName, valueCount);
+			return valueCount ++;
 		}
 	}
 }
