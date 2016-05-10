@@ -7,6 +7,9 @@ import java.io.RandomAccessFile;
 import java.net.URL;
 import java.util.Scanner;
 
+import util.SystemInfo;
+import util.ThreadDownload;
+
 public class Main {
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
