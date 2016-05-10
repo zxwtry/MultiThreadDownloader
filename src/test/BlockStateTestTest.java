@@ -21,6 +21,7 @@ public class BlockStateTestTest {
 			BlockStateTest blockStateTest = (BlockStateTest) objectInputStream.readObject();
 			System.out.println(blockStateTest.getValueOfIsFinished(0));
 			System.out.println(blockStateTest.getValueOfIsFinished(10));
+			System.out.println(blockStateTest.getValueOfIsFinished(11));
 			System.out.println(blockStateTest.getValueOfIsFinished(14));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -41,6 +42,7 @@ public class BlockStateTestTest {
 		BlockStateTest blockStateTest = new BlockStateTest();
 		blockStateTest.setSizeOfIsFinised(14);
 		blockStateTest.setTrueInIndex(10);
+		blockStateTest.setTrueInIndex(11);
 		save(blockStateTest, "C:/data/state.txt");
 	}
 	static void save(BlockStateTest blockStateTest, String url) {

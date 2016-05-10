@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadFactory;
 public class ThreadPoolTest {
 	static int numOfThreads = 3;
 	public static void main(String[] args) {
+		System.out.println(4 << 20);
 		myNewFixedThreadPool();
 	}
 	static void myNewFixedThreadPool() {
@@ -23,7 +24,7 @@ public class ThreadPoolTest {
 				@Override
 				public void run() {
 					try {
-						Thread.sleep(300);
+						Thread.sleep(700);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
