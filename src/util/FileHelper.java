@@ -43,7 +43,11 @@ public class FileHelper {
 		return getBlockState(urlString, 4);
 	}
 	public static BlockState getBlockState(String urlString, int sizeOfM) {
-		BlockState blockState = new BlockState();
+		String mtdString = getPersistURI(urlString);
+		BlockState blockState = null;
+		blockState = readBlockStateFromDisk(mtdString);
+		if (blockState != null)   return blockState;
+		blockState = new BlockState();
 		long lengthOfFile = FileHelper.getLengthOfFile(urlString);
 		long lengthOfBlock = sizeOfM << 20;
 		int numOfBlock = (int)(lengthOfFile / lengthOfBlock);
@@ -51,7 +55,7 @@ public class FileHelper {
 		blockState.setLengthOfFile(lengthOfFile);
 		return blockState;
 	}
-	public ArrayList<BlockState> readBlockStateFromDisk() {
+	public static ArrayList<BlockState> readBlockStateFromDisk() {
 		String pathBase = SystemInfo.getDefaultDownloadPath();
 		File filePath = new File(pathBase);
 		String[] filePaths = filePath.list();
@@ -65,7 +69,7 @@ public class FileHelper {
 		}
 		return blockStates;
 	}
-	public BlockState readBlockStateFromDisk(String uri) {
+	public static BlockState readBlockStateFromDisk(String uri) {
 		BlockState blockState = null;
 		ObjectInputStream objectInputStream = null;
 		try {
@@ -85,7 +89,7 @@ public class FileHelper {
 		}
 		return blockState;
 	}
-	public boolean persistBlockStateToDisk(String fileNameWithPosfix, BlockState blockState) {
+	public static boolean persistBlockStateToDisk(String fileNameWithPosfix, BlockState blockState) {
 		String persistURI = getPersistURI(fileNameWithPosfix);
 		File file = new File(persistURI);
 		ObjectOutputStream objectOutputStream = null;
@@ -109,7 +113,7 @@ public class FileHelper {
 			}
 		}
 	}
-	public String getPersistURI(String fileNameWithPosfix) {
+	public static String getPersistURI(String fileNameWithPosfix) {
 		return SystemInfo.getDefaultDownloadPath()+"/"+fileNameWithPosfix+".mtd";
 	}
 }

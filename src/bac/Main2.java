@@ -39,6 +39,7 @@ public class Main2 {
 			URLConnection urlConnection = new URL(urlString).openConnection();
 			urlConnection.connect();
 			inputStreams[index] = urlConnection.getInputStream();
+			System.out.println("is markSupported : "+inputStreams[index].markSupported());
 			randomAccessFiles[index] = new RandomAccessFile(SystemInfo.getDefaultDownloadPath()+"/"+uri, "rw");
 		}
 		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
@@ -95,8 +96,13 @@ public class Main2 {
 //			} catch (Exception e) {
 //				e.printStackTrace();
 //			}
-		}
+		}	
 		fixedThreadPool.shutdown();
+//		for (int index = 0; index < numOfThreads; index ++) {
+//			inputStreams[index].close();
+//			randomAccessFiles[index].close();
+//		}
+		System.out.println("下载完成");
 	}
 	static int getValueFromString(String threadName) {
 		if (map.containsKey(threadName))
