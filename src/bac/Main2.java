@@ -43,8 +43,13 @@ public class Main2 {
 			randomAccessFiles[index] = new RandomAccessFile(SystemInfo.getDefaultDownloadPath()+"/"+uri, "rw");
 		}
 		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
+			
+		}
+		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
 			final long start = index * sizeOfBlock;
 			final long end = (index == blockState.getSizeOfIsFinished() - 1 ? blockState.getLengthOfFile() : (index+1)*sizeOfBlock) - 1;
+			URLConnection urlConnection = new URL(urlString).openConnection();
+			urlConnection.connect();
 			fixedThreadPool.execute(new Runnable() {
 				@Override
 				public void run() {
