@@ -36,6 +36,7 @@ public class Main {
 			urlConnection.connect();
 		    final InputStream inputStream = urlConnection.getInputStream();
 		    inputStreams[index] = inputStream;
+			@SuppressWarnings("resource")
 			final RandomAccessFile randomAccessFile = new RandomAccessFile(SystemInfo.getDefaultDownloadPath()+"/"+uri, "rw");
 			final int indexInThread = index;
 			final long start = index * sizeOfBlock;

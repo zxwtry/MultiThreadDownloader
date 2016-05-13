@@ -43,7 +43,7 @@ public class FileHelper {
 		return getBlockState(urlString, 4);
 	}
 	public static BlockState getBlockState(String urlString, int sizeOfM) {
-		String mtdString = getPersistURI(urlString);
+		String mtdString = getFileNameFromURL(urlString);
 		BlockState blockState = null;
 		blockState = readBlockStateFromDisk(mtdString);
 		if (blockState != null)   return blockState;

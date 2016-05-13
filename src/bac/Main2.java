@@ -6,6 +6,7 @@ import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -39,12 +40,11 @@ public class Main2 {
 			URLConnection urlConnection = new URL(urlString).openConnection();
 			urlConnection.connect();
 			inputStreams[index] = urlConnection.getInputStream();
-			System.out.println("is markSupported : "+inputStreams[index].markSupported());
+//			System.out.println("is markSupported : "+inputStreams[index].markSupported());
 			randomAccessFiles[index] = new RandomAccessFile(SystemInfo.getDefaultDownloadPath()+"/"+uri, "rw");
 		}
-		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
-			
-		}
+		final long[] arrayOfStarts = new long[numOfThreads];
+		Arrays.fill(arrayOfStarts, -1);
 		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
 			final long start = index * sizeOfBlock;
 			final long end = (index == blockState.getSizeOfIsFinished() - 1 ? blockState.getLengthOfFile() : (index+1)*sizeOfBlock) - 1;
@@ -57,7 +57,8 @@ public class Main2 {
 					byte[] buf = new byte[1024];
 					int indexInThread = getValueFromString(Thread.currentThread().getName());
 					try {
-						inputStreams[indexInThread].skip(start);
+						long forSkip = arrayOfStarts[indexInThread] == -1 ? start : start - arrayOfStarts[indexInThread];
+						inputStreams[indexInThread].skip(forSkip);
 						randomAccessFiles[indexInThread].seek(start);
 						int count = 0;
 						long record = start;
@@ -90,6 +91,7 @@ public class Main2 {
 //						}
 						System.out.println("ThreadName : "+indexInThread + 
 								" ended.\nDownload length is " + downloadLength);
+						arrayOfStarts[indexInThread] = end;
 					}
 				}
 			});
