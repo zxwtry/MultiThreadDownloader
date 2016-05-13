@@ -20,7 +20,7 @@ public class Main {
 		String urlString = scanner.next();
 		BlockState blockState = FileHelper.getBlockState(urlString);
 		try {
-			myNewFixedThreadPool(3, blockState, FileHelper.getFileNameFromURL(urlString), urlString);
+			myNewFixedThreadPool(3, blockState, FileHelper.getFileNameWithPosfixFromURL(urlString), urlString);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

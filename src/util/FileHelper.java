@@ -11,7 +11,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class FileHelper {
-	public static String getFileNameFromURL(String urlString) {
+	public static String getFileNameWithPosfixFromURL(String urlString) {
 		StringBuilder stringBuilder = new StringBuilder(urlString);
 		for (int index = 0; index < urlString.length(); index ++) {
 			if (urlString.charAt(index) == '\\') {
@@ -21,12 +21,6 @@ public class FileHelper {
 		int lastSlashIndex = stringBuilder.lastIndexOf("/");
 		String name = stringBuilder.substring(lastSlashIndex+1);
 		return name;
-	}
-	public static String getFileNameFromURL(String fileName ,int index) {
-		int lastDotIndex = fileName.lastIndexOf('.');
-		StringBuilder stringBuilder = new StringBuilder(fileName);
-		stringBuilder.insert(lastDotIndex, "-"+index);
-		return stringBuilder.toString();
 	}
 	public static long getLengthOfFile(String urlString) {
 		long lengthOfFile = 0;
@@ -43,7 +37,7 @@ public class FileHelper {
 		return getBlockState(urlString, 4);
 	}
 	public static BlockState getBlockState(String urlString, int sizeOfM) {
-		String mtdString = getFileNameFromURL(urlString);
+		String mtdString = getPersistMTDURI(urlString);
 		BlockState blockState = null;
 		blockState = readBlockStateFromDisk(mtdString);
 		if (blockState != null)   return blockState;
@@ -69,11 +63,16 @@ public class FileHelper {
 		}
 		return blockStates;
 	}
-	public static BlockState readBlockStateFromDisk(String uri) {
+	public static BlockState readBlockStateFromDisk(String fileNameWithPosfix) {
 		BlockState blockState = null;
 		ObjectInputStream objectInputStream = null;
+		final String persistURI = getPersistMTDURI(fileNameWithPosfix);
 		try {
-			objectInputStream = new ObjectInputStream(new FileInputStream(new File(uri)));
+			File file = new File(persistURI);
+			if (! file.exists()) {
+				return null;
+			}
+			objectInputStream = new ObjectInputStream(new FileInputStream(file));
 			blockState = (BlockState) objectInputStream.readObject();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -90,7 +89,7 @@ public class FileHelper {
 		return blockState;
 	}
 	public static boolean persistBlockStateToDisk(String fileNameWithPosfix, BlockState blockState) {
-		String persistURI = getPersistURI(fileNameWithPosfix);
+		String persistURI = getPersistMTDURI(fileNameWithPosfix);
 		File file = new File(persistURI);
 		ObjectOutputStream objectOutputStream = null;
 		try {
@@ -113,7 +112,24 @@ public class FileHelper {
 			}
 		}
 	}
-	public static String getPersistURI(String fileNameWithPosfix) {
+	public static String getPersistMTDURI(String fileNameWithPosfix) {
 		return SystemInfo.getDefaultDownloadPath()+"/"+fileNameWithPosfix+".mtd";
 	}
+	public static String getPersistFILEURI(String fileNameWithPosfix) {
+		String persistFILEURI = SystemInfo.getDefaultDownloadPath()+"/"+fileNameWithPosfix;
+		File file = new File(persistFILEURI);
+		int index = 1;
+		while (file.exists()) {
+			persistFILEURI = getPersistFILEURI(fileNameWithPosfix, index ++);
+			file = new File(persistFILEURI);
+		}
+		return persistFILEURI;
+	}
+	private static String getPersistFILEURI(String fileNameWithPosfix ,int index) {
+		int lastDotIndex = fileNameWithPosfix.lastIndexOf('.');
+		StringBuilder stringBuilder = new StringBuilder(fileNameWithPosfix);
+		stringBuilder.insert(lastDotIndex, "-"+index);
+		return stringBuilder.toString();
+	}
+	
 }

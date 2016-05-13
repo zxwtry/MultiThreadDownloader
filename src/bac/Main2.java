@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 
 import util.BlockState;
 import util.FileHelper;
-import util.SystemInfo;
 
 public class Main2 {
 	static Map<String, Integer> map = new HashMap<String, Integer>();
@@ -23,15 +22,16 @@ public class Main2 {
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
 		String urlString = scanner.next();
-		BlockState blockState = FileHelper.getBlockState(urlString);
+		String fileNameWithPosfix = FileHelper.getFileNameWithPosfixFromURL(urlString);
+		final BlockState blockState = FileHelper.getBlockState(urlString);
 		try {
-			myNewFixedThreadPool(3, blockState, FileHelper.getFileNameFromURL(urlString), urlString);
+			myNewFixedThreadPool(3, blockState, fileNameWithPosfix, urlString);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		scanner.close();
 	}
-	static void myNewFixedThreadPool(int numOfThreads, BlockState blockState,String uri, String urlString) throws MalformedURLException, IOException {
+	static void myNewFixedThreadPool(int numOfThreads, final BlockState blockState, String fileNameWithPosfix, String urlString) throws MalformedURLException, IOException {
 		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(numOfThreads);
 		final long sizeOfBlock = 4 << 20;
 		final InputStream[] inputStreams = new InputStream[numOfThreads];
@@ -40,14 +40,14 @@ public class Main2 {
 			URLConnection urlConnection = new URL(urlString).openConnection();
 			urlConnection.connect();
 			inputStreams[index] = urlConnection.getInputStream();
-//			System.out.println("is markSupported : "+inputStreams[index].markSupported());
-			randomAccessFiles[index] = new RandomAccessFile(SystemInfo.getDefaultDownloadPath()+"/"+uri, "rw");
+			randomAccessFiles[index] = new RandomAccessFile(FileHelper.getPersistFILEURI(fileNameWithPosfix), "rw");
 		}
 		final long[] arrayOfStarts = new long[numOfThreads];
 		Arrays.fill(arrayOfStarts, -1);
 		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
 			final long start = index * sizeOfBlock;
 			final long end = (index == blockState.getSizeOfIsFinished() - 1 ? blockState.getLengthOfFile() : (index+1)*sizeOfBlock) - 1;
+			final int indexBlockState = index;
 			URLConnection urlConnection = new URL(urlString).openConnection();
 			urlConnection.connect();
 			fixedThreadPool.execute(new Runnable() {
@@ -78,6 +78,7 @@ public class Main2 {
 											"record : " + record + " end : " + end + " count : " + count);
 							}
 						}
+						blockState.setTrueInIndex(indexBlockState);
 					} catch (IOException e) {
 						e.printStackTrace();
 					} finally {
@@ -103,13 +104,16 @@ public class Main2 {
 //			} catch (Exception e) {
 //				e.printStackTrace();
 //			}
-		}	
+		}
 		fixedThreadPool.shutdown();
+		if ( fixedThreadPool.isShutdown() ) {
+			System.out.println("下载完成");
+		}
+		
 //		for (int index = 0; index < numOfThreads; index ++) {
 //			inputStreams[index].close();
 //			randomAccessFiles[index].close();
 //		}
-		System.out.println("下载完成");
 	}
 	static int getValueFromString(String threadName) {
 		if (map.containsKey(threadName))
