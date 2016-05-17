@@ -37,7 +37,8 @@ public class FileHelper {
 		return getBlockState(urlString, 4);
 	}
 	public static BlockState getBlockState(String urlString, int sizeOfM) {
-		String mtdString = getPersistMTDURI(urlString);
+		String fileNameWithPosfix = getFileNameWithPosfixFromURL(urlString);
+		String mtdString = getPersistMTDURI(fileNameWithPosfix);
 		BlockState blockState = null;
 		blockState = readBlockStateFromDisk(mtdString);
 		if (blockState != null)   return blockState;
@@ -47,6 +48,7 @@ public class FileHelper {
 		int numOfBlock = (int)(lengthOfFile / lengthOfBlock);
 		blockState.setSizeOfIsFinised(numOfBlock);
 		blockState.setLengthOfFile(lengthOfFile);
+		persistBlockStateToDisk(mtdString, blockState);
 		return blockState;
 	}
 	public static ArrayList<BlockState> readBlockStateFromDisk() {
@@ -88,9 +90,9 @@ public class FileHelper {
 		}
 		return blockState;
 	}
-	public static boolean persistBlockStateToDisk(String fileNameWithPosfix, BlockState blockState) {
-		String persistURI = getPersistMTDURI(fileNameWithPosfix);
+	public static boolean persistBlockStateToDisk(String persistURI, BlockState blockState) {
 		File file = new File(persistURI);
+		System.out.println("persistURI : " + persistURI);
 		ObjectOutputStream objectOutputStream = null;
 		try {
 			if (! file.exists())
@@ -120,14 +122,15 @@ public class FileHelper {
 		File file = new File(persistFILEURI);
 		int index = 1;
 		while (file.exists()) {
-			persistFILEURI = getPersistFILEURI(fileNameWithPosfix, index ++);
+			persistFILEURI = getPersistFILEURI(persistFILEURI, index ++);
 			file = new File(persistFILEURI);
 		}
+		
 		return persistFILEURI;
 	}
-	private static String getPersistFILEURI(String fileNameWithPosfix ,int index) {
-		int lastDotIndex = fileNameWithPosfix.lastIndexOf('.');
-		StringBuilder stringBuilder = new StringBuilder(fileNameWithPosfix);
+	private static String getPersistFILEURI(String persistFILEURI ,int index) {
+		int lastDotIndex = persistFILEURI.lastIndexOf('.');
+		StringBuilder stringBuilder = new StringBuilder(persistFILEURI);
 		stringBuilder.insert(lastDotIndex, "-"+index);
 		return stringBuilder.toString();
 	}

@@ -14,7 +14,7 @@ import util.BlockState;
 import util.FileHelper;
 import util.SystemInfo;
 
-public class Main {
+public class MainAnother {
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
 		String urlString = scanner.next();

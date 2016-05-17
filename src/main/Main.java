@@ -23,15 +23,16 @@ public class Main {
 		Scanner scanner = new Scanner(System.in);
 		String urlString = scanner.next();
 		String fileNameWithPosfix = FileHelper.getFileNameWithPosfixFromURL(urlString);
-		final BlockState blockState = FileHelper.getBlockState(urlString);
+		final String persistFILEURI = FileHelper.getPersistFILEURI(fileNameWithPosfix);
+		final BlockState blockState = FileHelper.getBlockState(persistFILEURI);
 		try {
-			myNewFixedThreadPool(3, blockState, fileNameWithPosfix, urlString);
+			myNewFixedThreadPool(3, blockState, fileNameWithPosfix, urlString, persistFILEURI);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		scanner.close();
 	}
-	static void myNewFixedThreadPool(int numOfThreads, final BlockState blockState, String fileNameWithPosfix, String urlString) throws MalformedURLException, IOException {
+	static void myNewFixedThreadPool(int numOfThreads, final BlockState blockState, String fileNameWithPosfix, String urlString, String persistFILEURI) throws MalformedURLException, IOException {
 		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(numOfThreads);
 		final long sizeOfBlock = 4 << 20;
 		final InputStream[] inputStreams = new InputStream[numOfThreads];
@@ -40,11 +41,12 @@ public class Main {
 			URLConnection urlConnection = new URL(urlString).openConnection();
 			urlConnection.connect();
 			inputStreams[index] = urlConnection.getInputStream();
-			randomAccessFiles[index] = new RandomAccessFile(FileHelper.getPersistFILEURI(fileNameWithPosfix), "rw");
+			randomAccessFiles[index] = new RandomAccessFile(persistFILEURI, "rw");
 		}
 		final long[] arrayOfStarts = new long[numOfThreads];
 		Arrays.fill(arrayOfStarts, -1);
 		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
+			System.out.println(getBlockStateNow(fileNameWithPosfix, index));
 			final long start = index * sizeOfBlock;
 			final long end = (index == blockState.getSizeOfIsFinished() - 1 ? blockState.getLengthOfFile() : (index+1)*sizeOfBlock) - 1;
 			final int indexBlockState = index;
@@ -114,6 +116,10 @@ public class Main {
 //			inputStreams[index].close();
 //			randomAccessFiles[index].close();
 //		}
+	}
+	private synchronized static boolean getBlockStateNow(String fileNameWithPosfix, int index) {
+		BlockState blockStateNow = FileHelper.readBlockStateFromDisk(fileNameWithPosfix);
+		return blockStateNow.getValueOfIsFinished(index);
 	}
 	static int getValueFromString(String threadName) {
 		if (map.containsKey(threadName))
