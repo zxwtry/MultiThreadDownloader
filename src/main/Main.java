@@ -1,73 +1,126 @@
 package main;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import util.SystemInfo;
-import util.ThreadDownload;
+import util.BlockState;
+import util.FileHelper;
 
 public class Main {
+	static Map<String, Integer> map = new HashMap<String, Integer>();
+	static int valueCount = 0;
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
-		String urlIndex = "http://dlsw.baidu.com/sw-search-sp"
-				+ "/soft/3a/12350/QQ_8.2.17724.0_setup.1459155849.exe";
-		urlIndex = urlIndex.replace('\\', '/');
-		String[] urlIndexSplits = urlIndex.split("/");
-		if (urlIndexSplits == null) {
-			scanner.close();
-			return;
-		}
-		String fileName = urlIndexSplits[urlIndexSplits.length-1];
-		String fileNameAbsoulte = SystemInfo.getDefaultDownloadPath()+"/"+fileName;
-		int indexOfAnotherFile = 1;
-		File file = new File(fileNameAbsoulte);
-		while ( file.exists() ) {
-			int indexOfLastDot = fileName.lastIndexOf(".");
-			String fileNamePre = fileName.substring(0, indexOfLastDot);
-			String fileNamePos = fileName.substring(indexOfLastDot+1, fileName.length());
-			fileNameAbsoulte = SystemInfo.getDefaultDownloadPath()+"/"+fileNamePre+indexOfAnotherFile+++"."+fileNamePos;
-			file = new File(fileNameAbsoulte);
-		}
-		
-		int numOfThreads = 5;
-		InputStream[] inputStreamArrays = new InputStream[numOfThreads];
-		RandomAccessFile[] randomAccessFilesArrays = new RandomAccessFile[numOfThreads];
+		String urlString = scanner.next();
+		String fileNameWithPosfix = FileHelper.getFileNameWithPosfixFromURL(urlString);
+		final BlockState blockState = FileHelper.getBlockState(urlString);
 		try {
-			file.createNewFile();
-			URL url = new URL(urlIndex);
-			long urlFileLength = url.openConnection().getContentLengthLong();
-			if (urlFileLength < 0) {
-				System.out.println("urlIndex is wrong");
-				scanner.close();
-				return;
-			}
-			System.out.println("Size of " + url.getFile() + " : " + urlFileLength);
-			inputStreamArrays[0] = url.openStream();
-			randomAccessFilesArrays[0] = new RandomAccessFile(file, "rw");
-			long bytePerThread = urlFileLength / numOfThreads;
-			long left = urlFileLength % numOfThreads;
-			if (0 == left)
-				System.out.println("left is 0");
-			for (int index = 0; index < numOfThreads; index ++) {
-				if (0 != index) {
-					inputStreamArrays[index] = url.openStream();
-					randomAccessFilesArrays[index] = new RandomAccessFile(file, "rw");
-				}
-				if (numOfThreads-1 == index) {
-					new ThreadDownload(index*bytePerThread, urlFileLength-1, 
-							inputStreamArrays[index], randomAccessFilesArrays[index]).start();
-				} else {
-					new ThreadDownload(index*bytePerThread, (index+1)*bytePerThread,
-							inputStreamArrays[index], randomAccessFilesArrays[index]).start();
-				}
-			}
+			myNewFixedThreadPool(3, blockState, fileNameWithPosfix, urlString);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		scanner.close();
+	}
+	static void myNewFixedThreadPool(int numOfThreads, final BlockState blockState, String fileNameWithPosfix, String urlString) throws MalformedURLException, IOException {
+		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(numOfThreads);
+		final long sizeOfBlock = 4 << 20;
+		final InputStream[] inputStreams = new InputStream[numOfThreads];
+		final RandomAccessFile[] randomAccessFiles = new RandomAccessFile[numOfThreads];
+		for (int index = 0; index < numOfThreads; index ++) {
+			URLConnection urlConnection = new URL(urlString).openConnection();
+			urlConnection.connect();
+			inputStreams[index] = urlConnection.getInputStream();
+			randomAccessFiles[index] = new RandomAccessFile(FileHelper.getPersistFILEURI(fileNameWithPosfix), "rw");
+		}
+		final long[] arrayOfStarts = new long[numOfThreads];
+		Arrays.fill(arrayOfStarts, -1);
+		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
+			final long start = index * sizeOfBlock;
+			final long end = (index == blockState.getSizeOfIsFinished() - 1 ? blockState.getLengthOfFile() : (index+1)*sizeOfBlock) - 1;
+			final int indexBlockState = index;
+			URLConnection urlConnection = new URL(urlString).openConnection();
+			urlConnection.connect();
+			fixedThreadPool.execute(new Runnable() {
+				@Override
+				public void run() {
+					long downloadLength = 0;
+					byte[] buf = new byte[1024];
+					int indexInThread = getValueFromString(Thread.currentThread().getName());
+					try {
+						long forSkip = arrayOfStarts[indexInThread] == -1 ? start : start - arrayOfStarts[indexInThread];
+						inputStreams[indexInThread].skip(forSkip);
+						randomAccessFiles[indexInThread].seek(start);
+						int count = 0;
+						long record = start;
+						while( (count = inputStreams[indexInThread].read(buf)) > 0) {
+							record += count;
+							downloadLength += count;
+							try {
+								if (record <= end)
+									randomAccessFiles[indexInThread].write(buf, 0, count);
+								else {
+									randomAccessFiles[indexInThread].write(buf, 0, count);
+									System.out.println(indexInThread + " breaked");
+									break;
+								}
+							} catch (java.lang.IndexOutOfBoundsException e) {
+								System.out.println("IndexOutOfBoundsException : " + 
+											"record : " + record + " end : " + end + " count : " + count);
+							}
+						}
+						blockState.setTrueInIndex(indexBlockState);
+					} catch (IOException e) {
+						e.printStackTrace();
+					} finally {
+//						try {
+//							if (null != inputStreams[indexInThread])
+//								inputStreams[indexInThread].close();
+//							if (null != randomAccessFiles[indexInThread])
+//								randomAccessFiles[indexInThread].close();
+//						} catch (IOException e) {
+//							e.printStackTrace();
+//						}
+						System.out.println("ThreadName : "+indexInThread + 
+								" ended.\nDownload length is " + downloadLength);
+						arrayOfStarts[indexInThread] = end;
+					}
+				}
+			});
+//			try {
+//				if (null != inputStreams[index])
+//					inputStreams[index].close();
+//				if (null != randomAccessFiles[index])
+//					randomAccessFiles[index].close();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+		}
+		fixedThreadPool.shutdown();
+		if ( fixedThreadPool.isShutdown() ) {
+			System.out.println("下载完成");
+		}
+		
+//		for (int index = 0; index < numOfThreads; index ++) {
+//			inputStreams[index].close();
+//			randomAccessFiles[index].close();
+//		}
+	}
+	static int getValueFromString(String threadName) {
+		if (map.containsKey(threadName))
+			return map.get(threadName);
+		else {
+			map.put(threadName, valueCount);
+			return valueCount ++;
+		}
 	}
 }
