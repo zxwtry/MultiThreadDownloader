@@ -24,7 +24,7 @@ public class Main {
 		String urlString = scanner.next();
 		String fileNameWithPosfix = FileHelper.getFileNameWithPosfixFromURL(urlString);
 		final String persistFILEURI = FileHelper.getPersistFILEURI(fileNameWithPosfix);
-		final BlockState blockState = FileHelper.getBlockState(persistFILEURI);
+		final BlockState blockState = FileHelper.getBlockState(urlString);
 		try {
 			myNewFixedThreadPool(3, blockState, fileNameWithPosfix, urlString, persistFILEURI);
 		} catch (IOException e) {
@@ -46,7 +46,6 @@ public class Main {
 		final long[] arrayOfStarts = new long[numOfThreads];
 		Arrays.fill(arrayOfStarts, -1);
 		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
-			System.out.println(getBlockStateNow(fileNameWithPosfix, index));
 			final long start = index * sizeOfBlock;
 			final long end = (index == blockState.getSizeOfIsFinished() - 1 ? blockState.getLengthOfFile() : (index+1)*sizeOfBlock) - 1;
 			final int indexBlockState = index;
