@@ -116,7 +116,7 @@ public class Main {
 //			randomAccessFiles[index].close();
 //		}
 	}
-	private synchronized static boolean getBlockStateNow(String fileNameWithPosfix, int index) {
+	synchronized static boolean getBlockStateNow(String fileNameWithPosfix, int index) {
 		BlockState blockStateNow = FileHelper.readBlockStateFromDisk(fileNameWithPosfix);
 		return blockStateNow.getValueOfIsFinished(index);
 	}

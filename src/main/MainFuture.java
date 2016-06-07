@@ -55,7 +55,7 @@ public class MainFuture {
 		for (int index = 0; index < blockState.getSizeOfIsFinished(); index ++) {
 			final long start = index * sizeOfBlock;
 			final long end = (index == blockState.getSizeOfIsFinished() - 1 ? blockState.getLengthOfFile() : (index+1)*sizeOfBlock) - 1;
-			final int indexBlockState = index;
+//			final int indexBlockState = index;
 			URLConnection urlConnection = new URL(urlString).openConnection();
 			urlConnection.connect();
 			linkedList.add(new FutureTask<>(new DownloadBlockCallable(inputStreams, randomAccessFiles, arrayOfStarts, start, end)));
@@ -220,7 +220,7 @@ public class MainFuture {
 //			randomAccessFiles[index].close();
 //		}
 	}
-	private synchronized static boolean getBlockStateNow(String fileNameWithPosfix, int index) {
+	synchronized static boolean getBlockStateNow(String fileNameWithPosfix, int index) {
 		BlockState blockStateNow = FileHelper.readBlockStateFromDisk(fileNameWithPosfix);
 		return blockStateNow.getValueOfIsFinished(index);
 	}
