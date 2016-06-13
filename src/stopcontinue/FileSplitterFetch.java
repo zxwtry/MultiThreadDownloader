@@ -13,6 +13,7 @@ public class FileSplitterFetch extends Thread {
 	FileAccessI fileAccessI = null; // File Access interface
 
 	public FileSplitterFetch(String sURL, String sName, long nStart, long nEnd, int id) throws IOException {
+		
 		this.sURL = sURL;
 		this.nStartPos = nStart;
 		this.nEndPos = nEnd;
